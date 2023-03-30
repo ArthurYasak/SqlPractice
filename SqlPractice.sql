@@ -1,8 +1,8 @@
 use northwind;
 #-------------------------------#
-#				1				#
+#               1               #
 #-------------------------------#
-# 			   1.1				#
+#              1.1              #
 SELECT OrderID, ShippedDate, ShipVia FROM Orders WHERE ShippedDate >= '1998-05-05 00:00:00' and ShipVia >= 2;
 
 # 			   1.2				#
