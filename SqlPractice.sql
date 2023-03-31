@@ -16,7 +16,7 @@ FROM Orders;
 
 #              1.3              #
 SELECT OrderID AS `Order Number`, COALESCE(DATE_FORMAT(ShippedDate, '%d.%m.%Y'), 'Not shipped') AS `Shipped Date`
-FROM Orders WHERE ( ShippedDate >= '1998-05-05 00:00:00' OR ShippedDate IS NULL);
+FROM Orders WHERE ( ShippedDate > '1998-05-05 00:00:00' OR ShippedDate IS NULL);
 
 #-------------------------------#
 #               2               #
@@ -37,12 +37,11 @@ SELECT DISTINCT Country FROM Customers ORDER BY Country DESC;
 SELECT DISTINCT OrderID FROM `Order Details` WHERE Quantity BETWEEN 3 AND 10;
 
 #              3.2              #
-EXPLAIN
+
 SELECT CustomerID, Country From Customers WHERE Country BETWEEN 'B' AND 'H' ORDER BY Country;
 
 #              3.3              #
-EXPLAIN
-SELECT CustomerId, Country FROM Customers WHERE Country >= 'B' AND Country <= 'H' ORDER BY Country;
+SELECT CustomerId, Country FROM Customers WHERE Country >= 'B' AND Country < 'H' ORDER BY Country;
 
 #-------------------------------#
 #               4               #
@@ -79,6 +78,38 @@ SELECT ShipCountry AS Country, COUNT(ShipCountry) AS Count FROM Orders
 GROUP BY ShipCountry order by COUNT DESC LIMIT 5;
 
 #              6.4              #
+SELECT 'ALL' AS Celler, 'ALL' AS Customer, COUNT(*) AS Amount
+FROM Orders, Customers, `Order Details`, Products, Suppliers 
+WHERE Orders.OrderId = `Order Details`.OrderId
+AND `Order Details`.ProductId = Products.ProductId 
+AND Products.SupplierId = Suppliers.SupplierId 
+AND Orders.CustomerId = Customers.CustomerId
+AND YEAR(Orders.OrderDate) = 1998 
+UNION
+SELECT Suppliers.CompanyName, 'ALL', COUNT(*)
+FROM Orders, Customers, `Order Details`, Products, Suppliers 
+WHERE Orders.OrderId = `Order Details`.OrderId
+AND `Order Details`.ProductId = Products.ProductId 
+AND Products.SupplierId = Suppliers.SupplierId 
+AND Orders.CustomerId = Customers.CustomerId
+AND YEAR(Orders.OrderDate) = 1998 GROUP BY Suppliers.SupplierId
+UNION
+SELECT 'ALL', Customers.CompanyName, COUNT(*)
+FROM Orders, Customers, `Order Details`, Products, Suppliers 
+WHERE Orders.OrderId = `Order Details`.OrderId
+AND `Order Details`.ProductId = Products.ProductId 
+AND Products.SupplierId = Suppliers.SupplierId 
+AND Orders.CustomerId = Customers.CustomerId
+AND YEAR(Orders.OrderDate) = 1998 GROUP BY Customers.CustomerId
+UNION
+(SELECT Suppliers.CompanyName AS Celler, Customers.CompanyName AS Customer, COUNT(*) AS Amount
+FROM Orders, Customers, `Order Details`, Products, Suppliers 
+WHERE Orders.OrderId = `Order Details`.OrderId
+AND `Order Details`.ProductId = Products.ProductId 
+AND Products.SupplierId = Suppliers.SupplierId 
+AND Orders.CustomerId = Customers.CustomerId
+AND YEAR(Orders.OrderDate) = 1998 GROUP BY Suppliers.SupplierId, Customers.CustomerId 
+ORDER BY Celler, Customer, Amount DESC);
 
 SELECT 
 IF (GROUPING(Suppliers.CompanyName) = 1, ' ALL ', Suppliers.CompanyName) AS Seller, 
@@ -89,8 +120,8 @@ WHERE Orders.OrderId = `Order Details`.OrderId
 AND `Order Details`.ProductId = Products.ProductId 
 AND Products.SupplierId = Suppliers.SupplierId 
 AND Orders.CustomerId = Customers.CustomerId
+AND YEAR(Orders.OrderDate) = 1998
 GROUP BY Suppliers.CompanyName, Customers.CompanyName WITH ROLLUP ORDER BY Seller, Customer, Amount DESC; 
-
 
 #              6.5              #
 SELECT Customers.ContactName AS Person, 'Customer' AS Type, Customers.City 
@@ -98,7 +129,7 @@ FROM Customers, Suppliers WHERE Customers.City = Suppliers.City
 UNION 
 SELECT Suppliers.ContactName, 'Supplier', Suppliers.City
 FROM Suppliers, Customers WHERE Customers.City = Suppliers.City  
-ORDER BY City, Person ;
+;
 
 #              6.6              #
 SELECT DISTINCT Customers.CustomerId, Customers.City FROM Customers, Customers AS CustomersMatch 
